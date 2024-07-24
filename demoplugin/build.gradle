@@ -1,0 +1,136 @@
+plugins {
+    id "eclipse"
+    id "idea"
+    id "org.graceframework.grace-plugin"
+    id "org.graceframework.asset-pipeline"
+    id "maven-publish"
+    id "io.github.gradle-nexus.publish-plugin"
+    id "signing"
+    id "org.graceframework.grace-gsp"
+}
+
+group "grace.plugins"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+configurations {
+    developmentOnly
+}
+
+dependencies {
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    compileOnly "org.graceframework:grace-boot"
+    console "org.graceframework:grace-console"
+    implementation "org.springframework.boot:spring-boot-starter-logging"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springframework.boot:spring-boot-autoconfigure"
+    implementation "org.graceframework:grace-core"
+    implementation "org.graceframework:grace-plugin-gsp"
+    profile "org.graceframework.profiles:web-plugin"
+    runtimeOnly "org.graceframework.plugins:asset-pipeline-plugin:6.0.0-M4"
+    testImplementation "org.graceframework:grace-test-support"
+    testImplementation "org.mockito:mockito-core"
+}
+
+java {
+    sourceCompatibility = '17'
+}
+
+tasks.withType(Jar) {
+    configure {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+}
+
+tasks.withType(GroovyCompile) {
+    configure(groovyOptions) {
+        forkOptions.jvmArgs = ['-Xmx1024m']
+    }
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+// enable if you wish to package this plugin as a standalone application
+bootJar.enabled = false
+
+
+assets {
+    packagePlugin = true
+}
+
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            from components.java
+
+            afterEvaluate {
+                artifact source: "${project.sourceSets.main.groovy.outputDir}/META-INF/grails-plugin.xml",
+                        classifier: "plugin",
+                        extension: 'xml'
+            }
+            pom {
+                name = "My Plugin"
+                description = "My first plugin"
+                url = 'https://github.com/grace-plugins/my-plugin'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'yourname'
+                        name = 'Your Name'
+                        email = 'yourname@example.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/grace-plugins/my-plugin.git'
+                    developerConnection = 'scm:git:ssh://github.com:grace-plugins/my-plugin.git'
+                    url = 'https://github.com/grace-plugins/my-plugin'
+                }
+            }
+        }
+    }
+}
+
+ext."signing.keyId" = project.hasProperty("signing.keyId") ? project.getProperty('signing.keyId') : System.getenv('SIGNING_KEY')
+ext."signing.password" = project.hasProperty("signing.password") ? project.getProperty('signing.password') : System.getenv('SIGNING_PASSPHRASE')
+ext."signing.secretKeyRingFile" = project.hasProperty("signing.secretKeyRingFile") ? project.getProperty('signing.secretKeyRingFile') : ("${System.properties['user.home']}${File.separator}.gnupg${File.separator}secring.gpg")
+ext.isReleaseVersion = !project.version.endsWith("SNAPSHOT")
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            def ossUser = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
+            def ossPass = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
+            def ossStagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: project.hasProperty("sonatypeOssStagingProfileId") ? project.sonatypeOssStagingProfileId : ''
+            nexusUrl = uri("https://s01.oss.sonatype.org/service/local/")
+            snapshotRepositoryUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            username = ossUser
+            password = ossPass
+            stagingProfileId = ossStagingProfileId
+        }
+    }
+}
+
+afterEvaluate {
+    signing {
+        required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+        sign publishing.publications.maven
+    }
+}
