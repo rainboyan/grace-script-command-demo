@@ -48,6 +48,7 @@ dependencies {
     implementation "org.graceframework.plugins:hibernate"
     implementation "org.hibernate:hibernate-core-jakarta:5.6.15.Final"
     implementation "org.graceframework.plugins:events"
+    implementation "grace.plugins:demoplugin:0.0.1-SNAPSHOT"
     implementation "org.graceframework.plugins:database-migration"
     implementation "org.graceframework:grace-plugin-gsp"
     profile "org.graceframework.profiles:web"
