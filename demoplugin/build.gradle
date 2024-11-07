@@ -12,7 +12,6 @@ plugins {
 group "grace.plugins"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -30,7 +29,7 @@ dependencies {
     implementation "org.graceframework:grace-core"
     implementation "org.graceframework:grace-plugin-gsp"
     profile "org.graceframework.profiles:web-plugin"
-    runtimeOnly "org.graceframework.plugins:asset-pipeline-plugin:6.0.0-M4"
+    runtimeOnly "org.graceframework.plugins:asset-pipeline-plugin:6.0.0"
     testImplementation "org.graceframework:grace-test-support"
     testImplementation "org.mockito:mockito-core"
 }

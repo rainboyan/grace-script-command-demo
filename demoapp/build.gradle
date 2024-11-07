@@ -11,7 +11,6 @@ plugins {
 group "grace.apps"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -54,7 +53,7 @@ dependencies {
     profile "org.graceframework.profiles:web"
     runtimeOnly "com.h2database:h2"
     runtimeOnly "org.apache.tomcat:tomcat-jdbc"
-    runtimeOnly "org.graceframework.plugins:asset-pipeline-plugin:6.0.0-M4"
+    runtimeOnly "org.graceframework.plugins:asset-pipeline-plugin:6.0.0"
     testImplementation "org.graceframework:grace-test-support"
     testImplementation "org.mockito:mockito-core"
     testImplementation "org.graceframework.plugins:geb"
